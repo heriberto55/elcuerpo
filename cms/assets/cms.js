@@ -10,6 +10,7 @@
   const mediaTools = document.getElementById('mediaTools');
   const insertMenu = document.getElementById('insertMenu');
   const selectedMenu = document.getElementById('selectedMenu');
+  const linkMenu = document.getElementById('linkMenu');
   const insertImageButton = document.getElementById('insertImage');
   const insertVideoButton = document.getElementById('insertVideo');
   const insertYoutubeButton = document.getElementById('insertYoutube');
@@ -20,6 +21,9 @@
   const moveMediaDownButton = document.getElementById('moveMediaDown');
   const deleteMediaButton = document.getElementById('deleteMedia');
   const selectedMediaLabel = document.getElementById('selectedMediaLabel');
+  const linkTextInput = document.getElementById('linkText');
+  const linkUrlInput = document.getElementById('linkUrl');
+  const applyLinkButton = document.getElementById('applyLink');
   const imageUpload = document.getElementById('imageUpload');
   const videoUpload = document.getElementById('videoUpload');
   const replaceUpload = document.getElementById('replaceUpload');
@@ -28,6 +32,7 @@
   let originalHtml = '';
   let editing = false;
   let selectedMedia = null;
+  let selectedLink = null;
   let savedRange = null;
 
   function getFrameDocument() {
@@ -41,6 +46,11 @@
 
   function isMediaElement(element) {
     return element && ['IMG', 'VIDEO', 'IFRAME'].indexOf(element.tagName) !== -1;
+  }
+
+  function linkFromTarget(target) {
+    const element = target && target.nodeType === 1 ? target : target && target.parentElement;
+    return element && element.closest ? element.closest('a') : null;
   }
 
   function isYoutubeElement(element) {
@@ -87,6 +97,13 @@
     deleteMediaButton.disabled = !hasSelection;
   }
 
+  function updateLinkForm() {
+    const hasSelection = Boolean(selectedLink && selectedLink.isConnected);
+    linkTextInput.value = hasSelection ? selectedLink.textContent.trim() : '';
+    linkUrlInput.value = hasSelection ? selectedLink.getAttribute('href') || '' : '';
+    applyLinkButton.disabled = !hasSelection;
+  }
+
   function mediaAtPoint(doc, x, y) {
     const mediaElements = Array.from(doc.querySelectorAll('img,video,iframe'));
     for (let i = mediaElements.length - 1; i >= 0; i -= 1) {
@@ -128,6 +145,7 @@
   function reloadPreview() {
     editing = false;
     selectedMedia = null;
+    selectedLink = null;
     savedRange = null;
     hideContextMenu();
     editButton.disabled = true;
@@ -139,6 +157,7 @@
   function showContextMenu(clientX, clientY, mode) {
     insertMenu.hidden = mode !== 'insert';
     selectedMenu.hidden = mode !== 'selected';
+    linkMenu.hidden = mode !== 'link';
     mediaTools.hidden = false;
 
     const margin = 12;
@@ -170,6 +189,19 @@
     updateMediaButtons();
   }
 
+  function selectLink(element) {
+    const doc = getFrameDocument();
+    doc.querySelectorAll('.cms-selected-link').forEach(function (node) {
+      node.classList.remove('cms-selected-link');
+    });
+
+    selectedLink = element && element.tagName === 'A' ? element : null;
+    if (selectedLink) {
+      selectedLink.classList.add('cms-selected-link');
+    }
+    updateLinkForm();
+  }
+
   function addEditorStyles(doc) {
     if (doc.getElementById('cms-editor-styles')) {
       return;
@@ -179,7 +211,9 @@
     style.id = 'cms-editor-styles';
     style.textContent = [
       '.cms-editing img,.cms-editing video,.cms-editing iframe{cursor:pointer;outline:2px dashed rgba(31,122,77,.35);outline-offset:3px;pointer-events:none;}',
-      '.cms-editing .cms-selected-media{outline:4px solid #1f7a4d!important;outline-offset:4px;}'
+      '.cms-editing a{cursor:pointer;outline:2px dashed rgba(199,150,86,.45);outline-offset:2px;}',
+      '.cms-editing .cms-selected-media{outline:4px solid #1f7a4d!important;outline-offset:4px;}',
+      '.cms-editing .cms-selected-link{outline:4px solid #c79656!important;outline-offset:3px;}'
     ].join('');
     doc.head.appendChild(style);
   }
@@ -192,6 +226,9 @@
 
     doc.querySelectorAll('.cms-selected-media').forEach(function (node) {
       node.classList.remove('cms-selected-media');
+    });
+    doc.querySelectorAll('.cms-selected-link').forEach(function (node) {
+      node.classList.remove('cms-selected-link');
     });
     doc.body.classList.remove('cms-editing');
   }
@@ -214,6 +251,7 @@
         }
 
         selectMedia(null);
+        selectLink(null);
       }, true);
 
       doc.addEventListener('contextmenu', function (event) {
@@ -228,12 +266,23 @@
         const media = mediaAtPoint(doc, event.clientX, event.clientY);
         if (isMediaElement(media)) {
           selectMedia(media);
+          selectLink(null);
           savedRange = null;
           showContextMenu(frameRect.left + event.clientX, frameRect.top + event.clientY, 'selected');
           return;
         }
 
+        const link = linkFromTarget(event.target);
+        if (link) {
+          selectMedia(null);
+          selectLink(link);
+          savedRange = null;
+          showContextMenu(frameRect.left + event.clientX, frameRect.top + event.clientY, 'link');
+          return;
+        }
+
         selectMedia(null);
+        selectLink(null);
         setInsertPointFromEvent(doc, event);
         showContextMenu(frameRect.left + event.clientX, frameRect.top + event.clientY, 'insert');
       }, true);
@@ -333,6 +382,7 @@
     } else {
       savedRange = null;
       selectMedia(null);
+      selectLink(null);
     }
 
     setStatus(editing ? 'Modo edición activo' : '');
@@ -344,11 +394,13 @@
     originalHtml = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
     editing = false;
     selectedMedia = null;
+    selectedLink = null;
     editButton.disabled = false;
     saveButton.disabled = true;
     cancelButton.disabled = true;
     mediaTools.hidden = true;
     updateMediaButtons();
+    updateLinkForm();
     setStatus('');
   });
 
@@ -533,11 +585,25 @@
     setStatus('Elemento eliminado.');
   });
 
-  document.addEventListener('click', function (event) {
-    if (event.button === 0) {
-      hideContextMenu();
+  applyLinkButton.addEventListener('click', function () {
+    if (!selectedLink || !selectedLink.isConnected) {
+      return;
     }
 
+    const nextText = linkTextInput.value.trim();
+    const nextUrl = linkUrlInput.value.trim();
+    if (nextText === '' || nextUrl === '') {
+      setStatus('Escribe el nombre y la URL del enlace.', true);
+      return;
+    }
+
+    selectedLink.textContent = nextText;
+    selectedLink.setAttribute('href', nextUrl);
+    hideContextMenu();
+    setStatus('Enlace actualizado.');
+  });
+
+  document.addEventListener('click', function (event) {
     if (!mediaTools.hidden && !mediaTools.contains(event.target)) {
       hideContextMenu();
     }

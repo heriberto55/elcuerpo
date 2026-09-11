@@ -292,6 +292,27 @@ body {
 
     iframe { width: 850px; height: 400px; }
 
+.facebook-embed-wrap {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 28px auto 0;
+    overflow: visible;
+}
+
+.facebook-post-embed {
+    display: block;
+    width: 500px;
+    max-width: 100%;
+    height: 317px;
+    border: none;
+    overflow: hidden;
+}
+
+.facebook-post-embed-tall {
+    height: 399px;
+}
+
     
 .aprenderan {
     

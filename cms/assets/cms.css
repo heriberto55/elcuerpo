@@ -299,6 +299,28 @@ input {
   font-weight: 700;
 }
 
+.context-section label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.context-section input {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #cbd9d1;
+  border-radius: 6px;
+  color: var(--ink);
+}
+
+.context-section input:focus {
+  outline: 2px solid rgba(31, 122, 77, 0.22);
+  border-color: var(--brand);
+}
+
 .context-menu button {
   min-height: 36px;
   padding: 0 12px;
@@ -313,6 +335,18 @@ input {
 
 .context-menu button:hover {
   border-color: var(--brand);
+}
+
+.context-menu .primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  text-align: center;
+}
+
+.context-menu .primary:hover {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
 }
 
 .context-menu button:disabled {
