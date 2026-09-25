@@ -1,8 +1,4 @@
 {
   "schemaVersion": 2,
-  "dockerfileLines": [
-    "FROM nginx:alpine",
-    "COPY ./ /usr/share/nginx/html/",
-    "EXPOSE 80"
-  ]
+  "dockerfilePath": "./Dockerfile"
 }
