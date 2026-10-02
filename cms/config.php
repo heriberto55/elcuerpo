@@ -1,19 +1,20 @@
 <?php
 declare(strict_types=1);
 
-const CMS_ADMIN_USER = 'admin';
-const CMS_ADMIN_PASSWORD_HASH = '$2y$10$7C1CmkoZt2rQVcCxZZPMc.WgyU.HLJXexfp4odin1gBlOHSWeDe4y';
+define('CMS_ADMIN_USER', getenv('CMS_ADMIN_USER') ?: 'admin');
+define('CMS_ADMIN_PASSWORD_HASH', getenv('CMS_ADMIN_PASSWORD_HASH') ?: '$2y$10$7C1CmkoZt2rQVcCxZZPMc.WgyU.HLJXexfp4odin1gBlOHSWeDe4y');
 const CMS_ROOT = __DIR__ . '/..';
-const CMS_BACKUP_DIR = __DIR__ . '/backups';
-const CMS_SESSION_DIR = __DIR__ . '/sessions';
-const CMS_UPLOAD_DIR = CMS_ROOT . '/uploads/cms';
+define('CMS_DATA_DIR', getenv('CMS_DATA_DIR') ?: CMS_ROOT . '/data');
+define('CMS_BACKUP_DIR', CMS_DATA_DIR . '/backups');
+define('CMS_SESSION_DIR', CMS_DATA_DIR . '/sessions');
+define('CMS_UPLOAD_DIR', CMS_DATA_DIR . '/uploads/cms');
 const CMS_UPLOAD_URL = 'uploads/cms';
 
 function cms_start_session(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
         if (!is_dir(CMS_SESSION_DIR)) {
-            mkdir(CMS_SESSION_DIR, 0755, true);
+            mkdir(CMS_SESSION_DIR, 0700, true);
         }
         session_save_path(CMS_SESSION_DIR);
         session_name('elcuerpo_cms');
