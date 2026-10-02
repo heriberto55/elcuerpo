@@ -313,6 +313,90 @@ body {
     height: 399px;
 }
 
+.cms-file-preview {
+    display: grid;
+    justify-items: center;
+    width: min(720px, 100%);
+    margin: 22px auto;
+    gap: 12px;
+}
+
+.cms-file-preview-pdf {
+    width: min(720px, 100%);
+}
+
+.cms-file-object {
+    display: block;
+    width: 100%;
+    height: 560px;
+    border: 1px solid rgba(101, 29, 50, 0.22);
+    border-radius: 8px;
+    background: #f7f7f7;
+    box-shadow: 0 12px 28px rgba(21, 71, 60, 0.12);
+}
+
+.cms-file-fallback {
+    display: grid;
+    min-height: 180px;
+    place-items: center;
+    color: #651D32;
+    font-weight: 700;
+}
+
+.cms-file-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: min(520px, 100%);
+    margin: 0 auto;
+    padding: 14px 16px;
+    border: 1px solid rgba(101, 29, 50, 0.22);
+    border-radius: 8px;
+    background: #ffffff;
+    color: #15473c;
+    text-decoration: none;
+    box-shadow: 0 12px 28px rgba(21, 71, 60, 0.12);
+}
+
+.cms-file-card:hover {
+    border-color: #c79656;
+    transform: translateY(-2px);
+}
+
+.cms-file-card-icon {
+    display: grid;
+    flex: 0 0 68px;
+    width: 68px;
+    height: 58px;
+    place-items: center;
+    border-radius: 8px;
+    background: #651D32;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.cms-file-card-body {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.cms-file-card-body strong {
+    color: #15473c;
+    font-size: 18px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.cms-file-card-body small {
+    color: #651D32;
+    font-size: 13px;
+    font-weight: 700;
+}
+
     
 .aprenderan {
     

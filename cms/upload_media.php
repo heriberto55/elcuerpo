@@ -32,6 +32,7 @@ if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
     exit;
 }
 
+$uploadKind = (string) ($_POST['upload_kind'] ?? 'media');
 $maxBytes = 80 * 1024 * 1024;
 if ((int) ($file['size'] ?? 0) > $maxBytes) {
     http_response_code(400);
@@ -59,7 +60,30 @@ $allowed = [
     'video/ogg' => 'ogv',
 ];
 
-if (!isset($allowed[$mime])) {
+$originalNameWithExtension = (string) ($file['name'] ?? 'archivo');
+$originalName = pathinfo($originalNameWithExtension, PATHINFO_FILENAME);
+$originalExtension = strtolower((string) pathinfo($originalNameWithExtension, PATHINFO_EXTENSION));
+$extension = '';
+$type = 'file';
+
+if ($uploadKind === 'file') {
+    $blockedExtensions = [
+        'asp', 'aspx', 'bat', 'cgi', 'cmd', 'com', 'css', 'exe', 'htm', 'html',
+        'jar', 'js', 'jsp', 'mjs', 'msi', 'php', 'phar', 'phtml', 'pl', 'ps1',
+        'psm1', 'py', 'scr', 'sh', 'svg', 'vbs',
+    ];
+
+    if ($originalExtension === '' || in_array($originalExtension, $blockedExtensions, true)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'message' => 'Este tipo de archivo no esta permitido.']);
+        exit;
+    }
+
+    $extension = preg_replace('/[^a-z0-9]+/', '', $originalExtension) ?: 'bin';
+} elseif (isset($allowed[$mime])) {
+    $extension = $allowed[$mime];
+    $type = strpos($mime, 'image/') === 0 ? 'image' : 'video';
+} else {
     http_response_code(400);
     echo json_encode(['ok' => false, 'message' => 'Solo se permiten imagenes y videos web.']);
     exit;
@@ -69,8 +93,6 @@ if (!is_dir(CMS_UPLOAD_DIR)) {
     mkdir(CMS_UPLOAD_DIR, 0755, true);
 }
 
-$originalName = pathinfo((string) ($file['name'] ?? 'archivo'), PATHINFO_FILENAME);
-$extension = $allowed[$mime];
 $name = cms_slug($originalName) . '-' . date('Ymd-His') . '-' . bin2hex(random_bytes(3)) . '.' . $extension;
 $destination = CMS_UPLOAD_DIR . '/' . $name;
 
@@ -83,5 +105,6 @@ if (!move_uploaded_file($tmpName, $destination)) {
 echo json_encode([
     'ok' => true,
     'url' => CMS_UPLOAD_URL . '/' . $name,
-    'type' => strpos($mime, 'image/') === 0 ? 'image' : 'video',
+    'type' => $type,
+    'name' => trim($originalNameWithExtension) !== '' ? $originalNameWithExtension : $name,
 ]);

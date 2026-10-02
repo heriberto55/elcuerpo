@@ -108,6 +108,7 @@ if ($loggedIn && !cms_is_allowed_page($selectedPage)) {
           <strong>Agregar contenido</strong>
           <button id="insertImage" type="button">Nueva imagen</button>
           <button id="insertVideo" type="button">Nuevo video</button>
+          <button id="insertFile" type="button">Nuevo archivo</button>
           <button id="insertYoutube" type="button">Video YouTube</button>
         </div>
         <div id="selectedMenu" class="context-section">
@@ -134,6 +135,7 @@ if ($loggedIn && !cms_is_allowed_page($selectedPage)) {
       </div>
       <input id="imageUpload" type="file" accept="image/*" hidden>
       <input id="videoUpload" type="file" accept="video/*" hidden>
+      <input id="fileUpload" type="file" hidden>
       <input id="replaceUpload" type="file" accept="image/*,video/*" hidden>
 
       <section class="preview-wrap">

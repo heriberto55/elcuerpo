@@ -274,11 +274,31 @@ input {
   position: fixed;
   z-index: 20;
   width: min(270px, calc(100vw - 28px));
+  max-height: min(560px, calc(100vh - 72px));
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   padding: 10px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 8px;
   box-shadow: 0 18px 54px rgba(22, 49, 42, 0.2);
+  scrollbar-width: thin;
+  scrollbar-color: #9bb2a6 #eef4f0;
+}
+
+.context-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.context-menu::-webkit-scrollbar-track {
+  background: #eef4f0;
+  border-radius: 999px;
+}
+
+.context-menu::-webkit-scrollbar-thumb {
+  background: #9bb2a6;
+  border-radius: 999px;
 }
 
 .context-section {

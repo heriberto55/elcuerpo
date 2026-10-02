@@ -13,6 +13,7 @@
   const linkMenu = document.getElementById('linkMenu');
   const insertImageButton = document.getElementById('insertImage');
   const insertVideoButton = document.getElementById('insertVideo');
+  const insertFileButton = document.getElementById('insertFile');
   const insertYoutubeButton = document.getElementById('insertYoutube');
   const replaceMediaButton = document.getElementById('replaceMedia');
   const replaceIframeButton = document.getElementById('replaceIframe');
@@ -26,6 +27,7 @@
   const applyLinkButton = document.getElementById('applyLink');
   const imageUpload = document.getElementById('imageUpload');
   const videoUpload = document.getElementById('videoUpload');
+  const fileUpload = document.getElementById('fileUpload');
   const replaceUpload = document.getElementById('replaceUpload');
   const config = window.CMS_CONFIG || {};
   const previewBaseUrl = frame.getAttribute('src').split('?')[0];
@@ -71,6 +73,56 @@
     }
 
     return value;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value).replace(/'/g, '&#39;');
+  }
+
+  function fileExtension(nameOrUrl) {
+    const cleanValue = String(nameOrUrl || '').split('?')[0].split('#')[0];
+    const match = cleanValue.match(/\.([a-z0-9]{1,8})$/i);
+    return match ? match[1].toUpperCase() : 'FILE';
+  }
+
+  function fileCardHtml(data, fallbackName) {
+    const label = data.name || fallbackName || 'Descargar archivo';
+    const url = data.url || '';
+    const extension = fileExtension(label || url);
+    const downloadLink = [
+      '<a class="cms-file-card" href="' + escapeAttribute(url) + '" target="_blank" rel="noopener" download>',
+      '<span class="cms-file-card-icon">' + escapeHtml(extension) + '</span>',
+      '<span class="cms-file-card-body">',
+      '<strong>' + escapeHtml(label) + '</strong>',
+      '<small>Click para abrir o descargar</small>',
+      '</span>',
+      '</a>'
+    ].join('');
+
+    if (extension === 'PDF') {
+      return [
+        '<div class="cms-file-preview cms-file-preview-pdf">',
+        '<object class="cms-file-object" data="' + escapeAttribute(url) + '" type="application/pdf">',
+        '<span class="cms-file-fallback">Vista previa no disponible.</span>',
+        '</object>',
+        downloadLink,
+        '</div>'
+      ].join('');
+    }
+
+    return [
+      '<div class="cms-file-preview">',
+      downloadLink,
+      '</div>'
+    ].join('');
   }
 
   function mediaName(element) {
@@ -162,8 +214,9 @@
 
     const margin = 12;
     const rect = mediaTools.getBoundingClientRect();
+    const menuHeight = Math.min(rect.height, window.innerHeight - (margin * 2));
     const left = Math.min(clientX, window.innerWidth - rect.width - margin);
-    const top = Math.min(clientY, window.innerHeight - rect.height - margin);
+    const top = Math.min(clientY, window.innerHeight - menuHeight - margin);
 
     mediaTools.style.left = Math.max(margin, left) + 'px';
     mediaTools.style.top = Math.max(margin, top) + 'px';
@@ -327,9 +380,10 @@
     }
   }
 
-  function uploadMedia(file) {
+  function uploadMedia(file, uploadKind) {
     const payload = new FormData();
     payload.append('media', file);
+    payload.append('upload_kind', uploadKind || 'media');
     payload.append('csrf_token', config.csrfToken);
     setStatus('Subiendo archivo...');
 
@@ -439,6 +493,11 @@
     videoUpload.click();
   });
 
+  insertFileButton.addEventListener('click', function () {
+    hideContextMenu();
+    fileUpload.click();
+  });
+
   insertYoutubeButton.addEventListener('click', function () {
     hideContextMenu();
     const url = prompt('Pega el link de YouTube');
@@ -459,7 +518,7 @@
       return;
     }
 
-    uploadMedia(file).then(function (data) {
+    uploadMedia(file, 'media').then(function (data) {
       insertHtml('<img src="' + data.url + '" alt="">');
       setStatus('Imagen agregada.');
     }).catch(function (error) {
@@ -474,9 +533,24 @@
       return;
     }
 
-    uploadMedia(file).then(function (data) {
+    uploadMedia(file, 'media').then(function (data) {
       insertHtml('<video src="' + data.url + '" controls></video>');
       setStatus('Video agregado.');
+    }).catch(function (error) {
+      setStatus(error.message, true);
+    });
+  });
+
+  fileUpload.addEventListener('change', function () {
+    const file = fileUpload.files[0];
+    fileUpload.value = '';
+    if (!file) {
+      return;
+    }
+
+    uploadMedia(file, 'file').then(function (data) {
+      insertHtml(fileCardHtml(data, file.name));
+      setStatus('Archivo agregado.');
     }).catch(function (error) {
       setStatus(error.message, true);
     });
@@ -519,7 +593,7 @@
       return;
     }
 
-    uploadMedia(file).then(function (data) {
+    uploadMedia(file, 'media').then(function (data) {
       if (selectedMedia.tagName === 'IMG' && data.type === 'image') {
         selectedMedia.setAttribute('src', data.url);
       } else if (selectedMedia.tagName === 'VIDEO' && data.type === 'video') {
